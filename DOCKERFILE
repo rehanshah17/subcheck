@@ -1,0 +1,40 @@
+# syntax=docker/dockerfile:1
+FROM rockylinux:9.7
+
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
+# Pick a GCC 11.3.0 toolchain URL (example uses xPack GCC releases).
+# You can swap this URL later if you choose a different prebuilt source.
+ARG GCC_TARBALL_URL="https://github.com/xpack-dev-tools/gcc-xpack/releases/download/v11.3.0-1/xpack-gcc-11.3.0-1-linux-x64.tar.gz"
+ARG GCC_DIR="/opt/gcc-11.3.0"
+
+RUN dnf -y update && \
+    dnf -y install \
+      make \
+      valgrind valgrind-devel \
+      git \
+      which \
+      findutils \
+      tar gzip bzip2 xz \
+      ca-certificates \
+      curl && \
+    dnf clean all
+
+# Install GCC 11.3.0 toolchain
+RUN mkdir -p "${GCC_DIR}" && \
+    curl -fsSL "${GCC_TARBALL_URL}" -o /tmp/gcc.tar.gz && \
+    tar -xzf /tmp/gcc.tar.gz -C /opt && \
+    rm -f /tmp/gcc.tar.gz && \
+    # xPack extracts into a versioned folder; symlink it to a stable path
+    ln -s /opt/xpack-gcc-11.3.0-1 /opt/gcc-11.3.0
+
+# Put pinned GCC first in PATH
+ENV PATH="/opt/gcc-11.3.0/bin:${PATH}"
+
+WORKDIR /work
+
+RUN echo "=== Toolchain versions in image ===" && \
+    gcc --version | head -n 1 && \
+    g++ --version | head -n 1 && \
+    valgrind --version
