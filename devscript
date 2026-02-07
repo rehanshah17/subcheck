@@ -1,8 +1,0 @@
-# just checking bro 
-
-set -Eeuo pipefail
-set -x
-
-go build -o subcheck ./cmd/subcheck
-
-mv subcheck ..
