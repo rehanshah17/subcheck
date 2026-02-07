@@ -1,14 +1,17 @@
 # subcheck
 
-**subcheck** runs your C/C++ project locally in a CAEN-accurate environment, so you can catch build and valgrind failures before wasting an autograder submission.
+**subcheck** runs your C/C++ project locally in a CAEN-accurate environment, so you can catch build and valgrind failures *before* wasting an autograder submission.
 
 It removes the need to SSH into CAEN and deal with Duo just to check whether your code will compile.
 
+---
 
 ## Requirements
 
 - **Docker Desktop** (must be running) [https://www.docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop)
-- **Go 1.16+**
+- **Go 1.16+** (only if building from source)
+
+---
 
 ## Quick Start
 
@@ -22,6 +25,12 @@ EXECUTABLE = myprogram
 release: build
 	gcc -o $(EXECUTABLE) main.c
 ```
+
+This matches what the autograder runs.
+
+---
+
+### Next steps
 
 After setting up your Makefile, run the environment setup once:
 
@@ -41,7 +50,7 @@ Then, depending on what you want to check:
 ### Commands
 
 ```bash
-subcheck env          # Prepare or verify the CAEN environment 
+subcheck env          # Prepare or verify the CAEN environment (one-time)
 subcheck build        # Run make release in the CAEN environment
 subcheck valgrind     # Run valgrind on your executable
 subcheck doctor       # Check Docker and system readiness
@@ -55,6 +64,7 @@ subcheck --verbose build   # Show full Docker and compiler output
 
 Output is quiet by default and focused on errors.
 
+---
 
 ## Why subcheck exists
 
@@ -66,8 +76,10 @@ The CAEN autograder runs:
 - valgrind
 
 Most student laptops run macOS with Apple Clang. With `-Werror` enabled, code that works locally can fail on CAEN and vice versa.
+
 subcheck eliminates this mismatch by using the same OS and compiler as the autograder.
 
+---
 
 ## How it works
 
@@ -81,6 +93,7 @@ On first run, it:
 
 Subsequent runs are fast and require no network or SSH access.
 
+---
 
 ## Common issues
 
@@ -91,10 +104,12 @@ Your project directory must contain a `Makefile` with a `release:` target.
 Add `EXECUTABLE = your_binary_name` to your Makefile.
 
 **Platform mismatch warning**\
-Happens on Apple Silicon, Docker handles x86\_64 emulation automatically.
+Normal on Apple Silicon. Docker handles x86\_64 emulation automatically.
 
 **Docker daemon not running**\
 Start Docker Desktop and try again.
+
+---
 
 ##
 
