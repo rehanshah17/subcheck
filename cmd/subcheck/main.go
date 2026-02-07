@@ -1,9 +1,10 @@
-package subcheck
+package main
 
 import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 )
 
 const (
@@ -27,15 +28,14 @@ func main() {
 
 func usage() {
 	fmt.Println("Usage:")
-	fmt.Println("  subcheck build")
+	fmt.Println("subcheck build")
 	fmt.Println()
-	fmt.Println("Runs `make release` in a CAEN-like environment to verify")
-	fmt.Println("that your project will compile before submission.")
+	fmt.Println("Runs `make release` in a CAEN-like environment to verify that")
+	fmt.Println("your project will compile before submission, saving you a submission :D")
 }
 
 func runBuild() {
 	checkDocker()
-
 	buildImage()
 	runMakeRelease()
 }
@@ -43,25 +43,41 @@ func runBuild() {
 func checkDocker() {
 	cmd := exec.Command("docker", "--version")
 	if err := cmd.Run(); err != nil {
-		fatal("Docker is not installed or not available in PATH.\nInstall Docker Desktop and try again.")
+		fatal("Docker is not installed or not available in PATH.\n")
 	}
 }
 
 func buildImage() {
 	fmt.Println("Building subcheck environment...")
 
+	exePath, err := os.Executable()
+	if err != nil {
+		fatal("Failed to determine executable path.")
+	}
+
+	exeDir := filepath.Dir(exePath)
+	dockerfilePath := filepath.Join(exeDir, "docker", "Dockerfile")
+
 	cmd := exec.Command(
 		"docker", "build",
+		"--platform=linux/amd64",
 		"-t", imageName,
-		"-f", "docker/Dockerfile",
-		".",
+		"-f", dockerfilePath,
+		exeDir,
 	)
 
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
-	if err := cmd.Run(); err != nil {
-		fatal("Failed to build Docker image.")
+	// Capture output instead of streaming it
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		fmt.Println()
+		fmt.Println("Docker image build failed.")
+		fmt.Println("This is an internal subcheck error.")
+		fmt.Println()
+		fmt.Println(string(output))
+		os.Exit(1)
 	}
 }
 
@@ -93,7 +109,7 @@ func runMakeRelease() {
 
 	fmt.Println()
 	fmt.Println("Build succeeded.")
-	fmt.Println("This project should compile on submission.")
+	fmt.Println("This project will compile on submission.")
 }
 
 func fatal(msg string) {
